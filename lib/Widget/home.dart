@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:to_do1/Widget/add.dart';
 import 'package:to_do1/Widget/detail.dart';
 
@@ -11,32 +14,42 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var todos = [
-    {
-      "name": "Clear Backlog",
-      "place": "Home",
-      "description": "Clear backlog coding lesson missed on Monday"
-    },
-    {
-      "name": "Fetch Baby",
-      "place": "Strawberry Wonderland",
-      "description": "Fetch home baby Akshu"
-    },
-    {
-      "name": "Have Dinner",
-      "place": "Somewhere in MH",
-      "description": "Bring family together"
-    }
   ];
+
   @override
+  void initState() {
+    loadData();
+    super.initState();
+  }
+// part where we load the data
+  void loadData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('todos') != null){
+      String data  = prefs.getString('todos')!;
+      setState(() {
+        todos = jsonDecode(data);
+      });
+    }
+  }
+  @override
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title:Text("Home"),
       actions: [
-        IconButton(onPressed: (){
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context)=>AddPage())
+        IconButton(onPressed: () async {
+          final data = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context)=>AddPage())
           );
+          todos.add(data["newItem"]!);
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setString("todos", jsonEncode(todos));
+          print(todos);
+          setState(() {
+            // In flutter we use add instead of a push
+            todos;
+          });
         }, icon: Icon(Icons.add))
       ],
       ),
